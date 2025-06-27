@@ -1,0 +1,20 @@
+[
+  {
+    "timestamp": "2025-04-09",
+    "user": "abhijeet",
+    "category": "Waste Management",
+    "message": "Garbage bins are overflowing in sector 12."
+  },
+  {
+    "timestamp": "2025-04-10",
+    "user": "vaisali",
+    "category": "Energy",
+    "message": "Street lights not working in main road."
+  },
+  {
+    "timestamp": "2025-04-10",
+    "user": "ankit",
+    "category": "Water",
+    "message": "Water supply inconsistent in block B."
+  }
+]

@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+*.pkl
+*.log
+*.db
+venv/
+.idea/
+.DS_Store
+*.pdf
+*.md
