@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from services.document_embedder import embed_and_store
-from services.document_retriever import search_policy
+from app.services.document_embedder import embed_and_store
+from app.services.document_retriever import search_policy
 from fastapi import UploadFile, File
 
 router = APIRouter()
