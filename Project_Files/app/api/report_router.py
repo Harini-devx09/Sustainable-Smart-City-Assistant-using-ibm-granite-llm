@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File
 from pydantic import BaseModel
-from app.services.report_generator import generate_sustainability_report, generate_markdown_report, convert_to_pdf
+from ..services.report_generator import generate_sustainability_report, generate_markdown_report, convert_to_pdf
 
 router = APIRouter()
 

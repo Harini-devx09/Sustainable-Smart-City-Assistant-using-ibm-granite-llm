@@ -1,5 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, Form
-from app.services.anomaly_file_checker import detect_anomalies_from_csv
+from ..services.anomaly_file_checker import detect_anomalies_from_csv
 
 router = APIRouter()
 
