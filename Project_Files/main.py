@@ -3,6 +3,7 @@ load_dotenv(override=True)
 
 
 from fastapi import FastAPI
+from app.api import api_router  # or wherever your routes are
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -11,6 +12,7 @@ from app.services.granite_llm import ask_granite
 
 # Create FastAPI app instance first
 app = FastAPI()
+app.include_router(api_router)  # if you use a router
 
 # Setup CORS for frontend communication
 app.add_middleware(
