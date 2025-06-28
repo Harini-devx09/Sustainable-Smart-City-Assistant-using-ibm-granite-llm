@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, UploadFile, File
 from pydantic import BaseModel
-from app.services.granite_llm import (
+from services.granite_llm import (
     generate_summary, generate_markdown_report, generate_city_report, generate_pdf_report
 )
 
