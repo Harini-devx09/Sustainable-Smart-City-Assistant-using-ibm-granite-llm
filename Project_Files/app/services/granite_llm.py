@@ -1,7 +1,6 @@
 import os
 import io
 import traceback
-
 from langchain_ibm import WatsonxLLM
 from langchain_core.prompts import PromptTemplate
 from langchain.chains import LLMChain
