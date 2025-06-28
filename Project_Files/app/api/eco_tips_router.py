@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from ..services.granite_llm import generate_eco_tip
+from app.services.granite_llm import generate_eco_tip
 
 router = APIRouter()
 

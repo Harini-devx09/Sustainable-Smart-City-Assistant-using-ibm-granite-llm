@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File
 import pandas as pd
-from ..services.kpi_file_forecaster import forecast_kpi
+from app.services.kpi_file_forecaster import forecast_kpi
 
 router = APIRouter()
 

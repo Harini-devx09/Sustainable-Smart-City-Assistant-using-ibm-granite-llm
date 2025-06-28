@@ -4,7 +4,13 @@ from fpdf import FPDF
 import tempfile
 import pandas as pd
 import matplotlib.pyplot as plt
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), "Project_Files"))
+from app.api.chat_router import router as chat_router
+
 from streamlit_option_menu import option_menu
+
 
 st.set_page_config(page_title="🌆 Smart City Assistant", layout="wide")
 
