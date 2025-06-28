@@ -1,14 +1,17 @@
 import os
 import io
 import traceback
-from dotenv import load_dotenv
+
 from langchain_ibm import WatsonxLLM
 from langchain_core.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from fpdf import FPDF
 
-# Load local environment variables from .env (only for local dev)
-load_dotenv()
+# Only load .env if it exists (for local development)
+if os.path.exists(".env"):
+    from dotenv import load_dotenv
+    load_dotenv()
+
 
 # Define required environment variables
 required_env_vars = [
