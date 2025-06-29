@@ -4,10 +4,10 @@ from app.services.chat_assistant import ask_city_assistant
 
 router = APIRouter()
 
-class ChatPrompt(BaseModel):
+class ChatRequest(BaseModel):
     prompt: str
 
-@router.post("/ask", tags=["Chat Assistant"])
-def chat_with_city_assistant(data: ChatPrompt):
-    response = ask_city_assistant(data.prompt)
+@router.post("/ask")
+def chat_with_city_assistant(request: ChatRequest):
+    response = ask_city_assistant(request.prompt)
     return {"response": response}

@@ -72,10 +72,10 @@ def generate_summary(text: str) -> str:
     return ask_granite(prompt)
 
 # 3. Eco tip generator
-def generate_eco_tip(topic: str) -> str:
-    prompt = f"Provide 5 practical eco-friendly tips related to the topic: {topic}. Keep it concise and bullet-pointed."
+def generate_eco_tip(prompt: str) -> str:
     result = watsonx_llm.invoke(prompt)
     return result.content if hasattr(result, "content") else str(result)
+
 
 # 4. City KPI sustainability report
 def generate_city_report(kpi_data: str) -> str:

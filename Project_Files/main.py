@@ -6,7 +6,9 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
-# ✅ Corrected imports from app.api.*
+# ✅ Granite Watsonx import
+
+# ✅ All routers
 from app.api.chat_router import router as chat_router
 from app.api.policy_router import router as policy_router
 from app.api.feedback_router import router as feedback_router
@@ -19,20 +21,21 @@ from app.api.vector_router import router as vector_router
 from app.api.pinecone_router import router as pinecone_router
 from app.api.anomaly_router import router as anomaly_router
 
-# ✅ Granite LLM import
+# ✅ Granite Watsonx import
 from app.services.granite_llm import ask_granite
 
 app = FastAPI()
 
-# ✅ CORS (important for frontend-backend integration)
+# ✅ CORS middleware: fixed to avoid browser issues
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],         # ← You can restrict this in production
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_credentials=False     # ← Required when allow_origins=["*"]
 )
 
-# ✅ Add all routers
+# ✅ All routes
 app.include_router(chat_router, prefix="/chat")
 app.include_router(policy_router, prefix="/policy")
 app.include_router(feedback_router, prefix="/feedback")

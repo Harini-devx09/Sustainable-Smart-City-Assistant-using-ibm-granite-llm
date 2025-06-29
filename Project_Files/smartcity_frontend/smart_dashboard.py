@@ -99,12 +99,70 @@ if selected == "🏠 Dashboard Summary":
     st.subheader("🌿 Sustainability Tips")
     st.markdown("- 💧 Implement rainwater harvesting systems\n- ⚡ Use motion sensors\n- 🌿 Expand green zones")
 
-elif selected == "🍃 Eco Tips":
+elif selected == "🌱 Eco Tips Generator":
     st.title("🌱 Eco Tips Generator")
-    topic = st.text_input("Enter a topic (e.g. water, waste, traffic)")
-    if st.button("Get Eco Tip"):
-        r = requests.post(f"{BASE_URL}/get-eco-tip", json={"topic": topic})
-        st.success(r.json().get("tip"))
+    user_input = st.text_input("Enter a topic and number of tips (e.g. traffic 10)")
+
+    if user_input:
+        try:
+            parts = user_input.strip().rsplit(" ", 1)
+            topic = parts[0]
+            count = int(parts[1]) if len(parts) == 2 and parts[1].isdigit() else 5
+            r = requests.get(f"{BASE_URL}/eco/tips", params={"topic": topic, "count": count})
+
+            if r.status_code == 200:
+                tips = r.json().get("tips", [])
+                if tips:
+                    st.markdown("### 🌿 Eco Tips")
+                    for i, tip in enumerate(tips, 1):
+                        st.markdown(f"{i}. {tip}")
+                else:
+                    st.warning("No tips returned.")
+            else:
+                st.error(f"❌ Server returned status code {r.status_code}")
+        except Exception as e:
+            st.error(f"Error: {e}")
+
+elif selected == "🔍 Anomaly Detection":
+    st.title("🚨 Anomaly Detection")
+    file = st.file_uploader("📄 Upload .csv file", type="csv")
+    kpi = st.text_input("🔢 Enter KPI column name (e.g., Energy Consumption)")
+    threshold = st.number_input("⚙️ Threshold", value=1000.0)
+
+    if file and kpi and st.button("Detect Anomalies"):
+        try:
+            response = requests.post(
+                f"{BASE_URL}/anomaly/check-anomalies",
+                files={"file": file},
+                data={"kpi": kpi, "threshold": threshold}
+            )
+            if response.status_code == 200:
+                result = response.json()
+                anomalies = result.get("anomalies", [])
+
+                if anomalies:
+                    df = pd.DataFrame(anomalies)
+                    st.success(f"✅ {len(df)} anomalies detected.")
+
+                    st.markdown("### 🔍 Anomalies Table")
+                    st.dataframe(df)
+
+                    # Plot chart
+                    st.markdown("### 📈 Anomaly Chart")
+                    fig, ax = plt.subplots()
+                    ax.plot(df.index, df[kpi], 'ro', label='Anomalies')
+                    ax.axhline(y=threshold, color='blue', linestyle='--', label='Threshold')
+                    ax.set_ylabel(kpi)
+                    ax.set_title(f"Anomalies in {kpi}")
+                    ax.legend()
+                    st.pyplot(fig)
+                else:
+                    st.info("✅ No anomalies found based on the threshold.")
+            else:
+                st.error(f"❌ Server returned {response.status_code}")
+                st.text(response.text)
+        except Exception as e:
+            st.error(f"🔥 Request failed: {e}")
 
 elif selected == "📊 KPI Forecasting":
     st.title("📊 KPI Forecasting")
@@ -113,130 +171,32 @@ elif selected == "📊 KPI Forecasting":
     if file:
         if st.button("📈 Predict KPI"):
             try:
-                r = requests.post(f"{BASE_URL}/upload-kpi", files={"file": file})
+                r = requests.post(f"{BASE_URL}/kpi-upload/upload-kpi", files={"file": file})
                 if r.status_code == 200:
-                    try:
-                        result = r.json()
-                        forecast = result.get("forecast", {})
-                        next_year = forecast.get("next_year")
-                        prediction = forecast.get("predicted_value")
-                        st.write("🧪 Debug:", next_year, prediction)
+                    result = r.json()
+                    forecast = result.get("forecast", {})
+                    next_year = forecast.get("next_year")
+                    prediction = forecast.get("predicted_value")
 
-                        if next_year and prediction:
-                            st.markdown("### 🔍 KPI Forecast Summary")
-                            st.markdown(f"""
-                                <div style='
-                                    display: flex;
-                                    flex-direction: row;
-                                    gap: 2rem;
-                                    margin-top: 10px;
-                                '>
-                                    <div style='
-                                        flex: 1;
-                                        background-color:#f3f8ff;
-                                        padding: 20px;
-                                        border-radius: 12px;
-                                        box-shadow: 2px 2px 10px rgba(0,0,0,0.08);
-                                        text-align: center;
-                                    '>
-                                        <h5>📅 Predicted Year</h5>
-                                        <p style='font-size: 28px; color: #1565c0; font-weight: bold;'>{next_year}</p>
-                                    </div>
-                                    <div style='
-                                        flex: 1;
-                                        background-color:#f3f8ff;
-                                        padding: 20px;
-                                        border-radius: 12px;
-                                        box-shadow: 2px 2px 10px rgba(0,0,0,0.08);
-                                        text-align: center;
-                                    '>
-                                        <h5>📈 KPI</h5>
-                                        <p style='font-size: 28px; color: #2e7d32; font-weight: bold;'>Energy Consumption</p>
-                                    </div>
-                                    <div style='
-                                        flex: 1;
-                                        background-color:#f3f8ff;
-                                        padding: 20px;
-                                        border-radius: 12px;
-                                        box-shadow: 2px 2px 10px rgba(0,0,0,0.08);
-                                        text-align: center;
-                                    '>
-                                        <h5>📊 Predicted Value</h5>
-                                        <p style='font-size: 28px; color: #d84315; font-weight: bold;'>{prediction} kWh</p>
-                                    </div>
-                                </div>
-                            """, unsafe_allow_html=True)
+                    st.markdown("### 🔍 KPI Forecast Summary")
+                    col1, col2, col3 = st.columns(3)
+                    col1.metric("📅 Year", next_year)
+                    col2.metric("📈 KPI", "Energy Consumption")
+                    col3.metric("🔮 Predicted", f"{prediction} kWh")
 
-                            # Highlighted callout box
-                            st.markdown(f"""
-                                <div style='
-                                    background-color: #fff3e0;
-                                    padding: 25px;
-                                    border-left: 6px solid #ff6f00;
-                                    margin-top: 25px;
-                                    border-radius: 10px;
-                                    font-size: 20px;
-                                    font-weight: 600;
-                                    color: #bf360c;
-                                    box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
-                                '>
-                                    🎯 Forecasted Energy for <strong>{next_year}</strong> is <strong>{prediction} kWh</strong>
-                                </div>
-                            """, unsafe_allow_html=True)
+                    df = pd.DataFrame({
+                        "Year": forecast.get("input_years", []) + [next_year],
+                        "Energy": forecast.get("input_values", []) + [prediction]
+                    })
 
-                            # Chart
-                            df = pd.DataFrame({
-                                "Year": forecast.get("input_years", []) + [next_year],
-                                "Energy": forecast.get("input_values", []) + [prediction]
-                            })
-
-                            st.markdown("### 📉 Forecast Trend")
-                            st.line_chart(df.set_index("Year"))
-                        else:
-                            st.warning("⚠️ Forecast result is missing.")
-                    except Exception:
-                        st.error("❌ Invalid JSON response from server.")
-                        st.text(r.text)
+                    st.markdown("### 📉 Forecast Trend")
+                    st.line_chart(df.set_index("Year"))
                 else:
-                    st.error(f"❌ API returned {r.status_code}")
+                    st.error(f"❌ Error: {r.status_code}")
                     st.text(r.text)
             except Exception as e:
-                st.error(f"🔥 Request error: {e}")
+                st.error(f"🔥 Request failed: {e}")
 
-elif selected == "🔍 Anomaly Detection":
-    st.markdown("<h2 style='color:#c62828;'>🚨 Anomaly Detection</h2>", unsafe_allow_html=True)
-    file = st.file_uploader("📄 Upload .csv file", type="csv")
-    kpi = st.text_input("🔢 Enter KPI column name")
-    threshold = st.number_input("⚙️ Threshold", value=1000.0)
-
-    if file and st.button("🔍 Detect"):
-        response = requests.post(
-            f"{BASE_URL}/check-anomalies",
-            files={"file": file},
-            data={"kpi": kpi, "threshold": threshold}
-        )
-        if response.status_code == 200:
-            result = response.json()
-            anomalies = result.get("anomalies", [])
-            st.success(f"✅ Found {len(anomalies)} anomaly points")
-            if anomalies:
-                df = pd.DataFrame(anomalies, columns=["Year", "Energy Consumption"])
-                st.markdown("### 🚨 Anomalies Detected")
-                st.dataframe(df)
-                st.markdown("### 📈 Anomaly Chart")
-                fig, ax = plt.subplots()
-                ax.plot(df["Year"], df["Energy Consumption"], marker='o', color='orange', label='Anomalies')
-                ax.axhline(y=threshold, color='red', linestyle='--', label='Threshold')
-                ax.set_xlabel("Year")
-                ax.set_ylabel("Energy Consumption")
-                ax.set_title("Energy Anomalies by Year")
-                ax.legend()
-                st.pyplot(fig)
-            else:
-                st.info("No anomalies detected in the uploaded file.")
-        else:
-            st.error(f"❌ Server error: {response.status_code}")
-            st.text(response.text)
 
 elif selected == "📘 Sustainability Report":
     st.title("📘 Sustainability Report Generator")
@@ -246,32 +206,53 @@ elif selected == "📘 Sustainability Report":
     if option == "Enter Text":
         content = st.text_area("Paste your KPI data or sustainability metrics here:")
         if st.button("Generate Report"):
-            r = requests.post(f"{BASE_URL}/generate-report", json={"text": content})
-            report = r.json().get("report")
-            if report:
-                st.markdown(report)
-                st.download_button("📄 Download Markdown", report, file_name="report.md")
-                pdf_path = convert_to_pdf(report)
-                with open(pdf_path, "rb") as f:
-                    st.download_button("📄 Download PDF", f, file_name="report.pdf")
-            else:
-                st.warning("⚠️ No report returned from backend.")
+            try:
+                # ✅ CORRECTED endpoint
+                r = requests.post(f"{BASE_URL}/report/generate-report", json={"text": content})
+                if r.status_code == 200:
+                    report = r.json().get("report")
+                    if report:
+                        st.markdown("### 📝 Generated Report")
+                        st.markdown(report)
+                        st.download_button("📄 Download Markdown", report, file_name="report.md")
+
+                        # Convert to PDF
+                        pdf_path = convert_to_pdf(report)
+                        with open(pdf_path, "rb") as f:
+                            st.download_button("📄 Download PDF", f, file_name="report.pdf")
+                    else:
+                        st.warning("⚠️ No report returned from backend.")
+                else:
+                    st.error(f"❌ Error: {r.status_code}")
+                    st.text(r.text)
+            except Exception as e:
+                st.error(f"🔥 Request failed: {e}")
 
     else:
         uploaded_file = st.file_uploader("Upload a .txt file", type=["txt"])
         if uploaded_file and st.button("Generate from File"):
-            content = uploaded_file.read().decode("utf-8")
-            r = requests.post(f"{BASE_URL}/upload-txt-generate-pdf", files={"file": ("file.txt", content)})
-            result = r.json()
-            report = result.get("summary")
-            if report:
-                st.markdown(report)
-                st.download_button("📄 Download Markdown", report, file_name="report.md")
-                pdf_url = result.get("pdf_path")
-                with open(pdf_url, "rb") as f:
-                    st.download_button("📄 Download PDF", f, file_name="report.pdf")
-            else:
-                st.warning("⚠️ No report generated.")
+            try:
+                content = uploaded_file.read().decode("utf-8")
+                # ✅ CORRECTED endpoint
+                r = requests.post(f"{BASE_URL}/report/upload-txt-generate-pdf", files={"file": ("file.txt", content)})
+
+                if r.status_code == 200:
+                    result = r.json()
+                    report = result.get("summary")
+                    pdf_path = result.get("pdf_path")
+                    if report:
+                        st.markdown("### 📝 Generated Report")
+                        st.markdown(report)
+                        st.download_button("📄 Download Markdown", report, file_name="report.md")
+                        with open(pdf_path, "rb") as f:
+                            st.download_button("📄 Download PDF", f, file_name="report.pdf")
+                    else:
+                        st.warning("⚠️ No report returned.")
+                else:
+                    st.error(f"❌ Error: {r.status_code}")
+                    st.text(r.text)
+            except Exception as e:
+                st.error(f"🔥 Upload failed: {e}")
 
 
 elif selected == "📄 Policy Summarizer":
@@ -283,35 +264,47 @@ elif selected == "📄 Policy Summarizer":
         input_text = st.text_area("Paste policy text", height=300)
         if st.button("Generate Summary"):
             if input_text.strip():
-                res = requests.post(
-                    f"{BASE_URL}/policy/summarize-policy",
-                    json={"text": input_text}
-                )
-                summary = res.json().get("summary")
-                if summary:
-                    st.success("✅ Summary Generated")
-                    st.markdown(summary)
-                else:
-                    st.warning("⚠️ No summary returned from backend.")
+                try:
+                    res = requests.post(
+                        f"{BASE_URL}/policy/policy/summarize-policy",  # ✅ Correct endpoint
+                        json={"text": input_text}
+                    )
+                    if res.status_code == 200:
+                        summary = res.json().get("summary")
+                        if summary:
+                            st.success("✅ Summary Generated")
+                            st.markdown(summary)
+                        else:
+                            st.warning("⚠️ No summary returned from backend.")
+                    else:
+                        st.error(f"❌ API Error: {res.status_code}")
+                        st.text(res.text)
+                except Exception as e:
+                    st.error(f"🔥 Request failed: {e}")
             else:
                 st.warning("⚠️ Please enter policy text.")
 
     else:
         uploaded_file = st.file_uploader("Upload a .txt file", type=["txt"])
         if uploaded_file and st.button("Generate Summary from File"):
-            # read the file and send it to backend
-            res = requests.post(
-                f"{BASE_URL}/policy/summarize-uploaded-file",
-                files={"file": (uploaded_file.name, uploaded_file, "text/plain")}
-            )
-            print("Status:", res.status_code)
-            print("Response Text:", res.text)
-            summary = res.json().get("summary")
-            if summary:
-                st.success("✅ Summary Generated")
-                st.markdown(summary)
-            else:
-                st.warning("⚠️ No summary returned from backend.")
+            try:
+                file_bytes = uploaded_file.read()
+                res = requests.post(
+                    f"{BASE_URL}/policy/policy/summarize-uploaded-file",  # ✅ Correct endpoint
+                    files={"file": (uploaded_file.name, file_bytes, "text/plain")}
+                )
+                if res.status_code == 200:
+                    summary = res.json().get("summary")
+                    if summary:
+                        st.success("✅ Summary Generated")
+                        st.markdown(summary)
+                    else:
+                        st.warning("⚠️ No summary returned from backend.")
+                else:
+                    st.error(f"❌ API Error: {res.status_code}")
+                    st.text(res.text)
+            except Exception as e:
+                st.error(f"🔥 Upload failed: {e}")
 
 
 elif selected == "🤖 Chat Assistant":
@@ -324,14 +317,19 @@ elif selected == "🤖 Chat Assistant":
         r = requests.post(f"{BASE_URL}/chat/ask", json={"prompt": full_prompt})
         st.write(r.json().get("response"))
 
-elif selected == "📋 Citizen Feedback":
+elif selected == "📋 Citizen Feedback Log":
     st.title("📋 Citizen Feedback Log")
     try:
-        import json
-        with open("app/data/feedback_log.json", "r") as f:
-            feedback_data = json.load(f)
-        df = pd.DataFrame(feedback_data)
-        st.dataframe(df)
+        r = requests.get(f"{BASE_URL}/feedback/list")
+        if r.status_code == 200:
+            feedbacks = r.json().get("feedback", [])
+            if feedbacks:
+                for fb in feedbacks:
+                    st.markdown(f"**🧑 {fb['name']}**: {fb['feedback']}")
+            else:
+                st.warning("No feedback found.")
+        else:
+            st.error(f"Could not load feedback: {r.status_code}")
     except Exception as e:
-        st.error("❌ Could not load feedback log.")
-        st.text(str(e))
+        st.error(f"🔥 Error: {e}")
+

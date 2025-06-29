@@ -1,14 +1,15 @@
+import json
+import os
 from fastapi import APIRouter
-from pydantic import BaseModel
 
 router = APIRouter()
 
-class Feedback(BaseModel):
-    name: str
-    category: str
-    message: str
-
-@router.post("/feedback", tags=["Citizen Feedback"])
-def submit_feedback(feedback: Feedback):
-    print("Feedback received:", feedback)
-    return {"status": "success", "feedback": feedback}
+@router.get("/list", tags=["Feedback"])
+def get_feedback_log():
+    filepath = "app/data/feedback_log.json"
+    if os.path.exists(filepath):
+        with open(filepath, "r", encoding="utf-8") as f:
+            feedbacks = json.load(f)
+        return {"feedback": feedbacks}
+    else:
+        return {"feedback": []}

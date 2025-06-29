@@ -1,29 +1,43 @@
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, UploadFile, File, HTTPException
 from pydantic import BaseModel
-from app.services.report_generator import generate_sustainability_report, generate_markdown_report, convert_to_pdf
+from app.services.granite_llm import ask_granite
+import tempfile
+from fpdf import FPDF
 
 router = APIRouter()
 
-class TextData(BaseModel):
+class ReportTextRequest(BaseModel):
     text: str
 
 @router.post("/generate-report")
-def generate_report(data: TextData):
-    report = generate_sustainability_report(data.text)
-    if report:
-        return {"report": report}
-    return {"report": None}
-
-@router.post("/upload-txt-generate-markdown")
-def upload_txt_to_markdown(file: UploadFile = File(...)):
-    content = file.file.read().decode("utf-8")
-    summary = generate_sustainability_report(content)
-    path = generate_markdown_report(summary)
-    return {"markdown": summary, "path": path}
+def generate_report(request: ReportTextRequest):
+    prompt = f"Generate a sustainability report for the following data:\n{request.text}"
+    try:
+        response = ask_granite(prompt)
+        return {"report": response}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/upload-txt-generate-pdf")
-def upload_txt_to_pdf(file: UploadFile = File(...)):
-    content = file.file.read().decode("utf-8")
-    summary = generate_sustainability_report(content)
-    pdf_path = convert_to_pdf(summary)
-    return {"summary": summary, "pdf_path": pdf_path}
+def upload_txt_generate_pdf(file: UploadFile = File(...)):
+    try:
+        content = file.file.read().decode("utf-8")
+        prompt = f"Generate a sustainability report from this data:\n{content}"
+        summary = ask_granite(prompt)
+
+        # Generate PDF from summary
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=12)
+        for line in summary.split('\n'):
+            pdf.multi_cell(0, 10, line)
+
+        temp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+        pdf.output(temp.name)
+
+        return {
+            "summary": summary,
+            "pdf_path": temp.name
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to process file: {e}")

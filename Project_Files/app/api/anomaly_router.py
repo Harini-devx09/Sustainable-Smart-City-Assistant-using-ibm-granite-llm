@@ -1,22 +1,18 @@
-from fastapi import APIRouter, UploadFile, File, Form
-from app.services.anomaly_file_checker import detect_anomalies_from_csv
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+import pandas as pd
 
 router = APIRouter()
 
-@router.post("/check-anomalies", tags=["Anomaly Detection"])
-async def check_anomalies(
-    file: UploadFile = File(...),
-    kpi: str = Form(...),
-    threshold: float = Form(...)
-):
-    contents = await file.read()
-    from io import StringIO
-    csv_file = StringIO(contents.decode("utf-8"))
-
+@router.post("/check-anomalies")
+async def check_anomalies(kpi: str = Form(...), threshold: float = Form(...), file: UploadFile = File(...)):
     try:
-        result = detect_anomalies_from_csv(csv_file, kpi, threshold)
-        print("🔍 Backend anomaly result:", result)
-        return result
+        df = pd.read_csv(file.file)
+        if kpi not in df.columns:
+            raise HTTPException(status_code=400, detail=f"KPI column '{kpi}' not found in file")
+
+        anomalies = df[df[kpi] > threshold]
+        return {
+            "anomalies": anomalies.to_dict(orient="records")
+        }
     except Exception as e:
-        print("❌ Backend Error:", str(e))
-        return {"anomalies": [], "error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
