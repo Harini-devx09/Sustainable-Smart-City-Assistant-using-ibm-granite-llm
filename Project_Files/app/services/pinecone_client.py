@@ -6,8 +6,8 @@ load_dotenv()
 
 # Load credentials
 api_key = os.getenv("PINECONE_API_KEY")
-environment = os.getenv("PINECONE_ENV")  # E.g., 'us-west-1' or 'gcp-starter'
-index_name = os.getenv("INDEX_NAME")
+environment = os.getenv("PINECONE_ENVIRONMENT")  # ✅ Match Render Secret
+index_name = os.getenv("PINECONE_INDEX_NAME")    # ✅ Match Render Secret
 
 # Initialize Pinecone client
 pc = Pinecone(api_key=api_key)
@@ -17,12 +17,13 @@ if index_name not in pc.list_indexes().names():
     pc.create_index(
         name=index_name,
         dimension=384,
-        metric="cosine",  # or 'dotproduct' or 'euclidean'
+        metric="cosine",
         spec=ServerlessSpec(
-            cloud="aws",        # or "gcp"
-            region=environment  # example: "us-west-2"
+            cloud="aws",
+            region=environment
         )
     )
 
-# Get index object for future use
+# Get index object
 index = pc.Index(index_name)
+
