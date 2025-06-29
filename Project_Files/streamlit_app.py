@@ -3,7 +3,7 @@ import requests
 import os
 
 # Set backend API base URL (update if deployed separately)
-API_URL = os.getenv("API_URL", "https://your-fastapi-service.onrender.com")  # Replace with actual Render backend URL
+API_URL = os.getenv("API_URL", "http://localhost:8000") 
 
 st.set_page_config(page_title="Smart City Assistant", layout="wide")
 st.title("🌆 Sustainable Smart City Assistant")
