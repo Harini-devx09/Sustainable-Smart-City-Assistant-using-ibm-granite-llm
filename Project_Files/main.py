@@ -16,7 +16,7 @@ from Project_Files.app.api.pinecone_router import router as pinecone_router
 from Project_Files.app.api.anomaly_router import router as anomaly_router
 
 # ✅ Granite LLM import
-from app.services.granite_llm import ask_granite
+from Project_Files.app.services.granite_llm import ask_granite
 
 app = FastAPI()
 
