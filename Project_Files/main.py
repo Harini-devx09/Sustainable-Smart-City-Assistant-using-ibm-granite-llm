@@ -1,22 +1,26 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
 # ✅ Corrected imports from app.api.*
-from Project_Files.app.api.chat_router import router as chat_router
-from Project_Files.app.api.policy_router import router as policy_router
-from Project_Files.app.api.feedback_router import router as feedback_router
-from Project_Files.app.api.eco_tips_router import router as eco_tips_router
-from Project_Files.app.api.report_router import router as report_router
-from Project_Files.app.api.kpi_router import router as kpi_router
-from Project_Files.app.api.kpi_upload_router import router as kpi_upload_router
-from Project_Files.app.api.dashboard_router import router as dashboard_router
-from Project_Files.app.api.vector_router import router as vector_router
-from Project_Files.app.api.pinecone_router import router as pinecone_router
-from Project_Files.app.api.anomaly_router import router as anomaly_router
+from app.api.chat_router import router as chat_router
+from app.api.policy_router import router as policy_router
+from app.api.feedback_router import router as feedback_router
+from app.api.eco_tips_router import router as eco_tips_router
+from app.api.report_router import router as report_router
+from app.api.kpi_router import router as kpi_router
+from app.api.kpi_upload_router import router as kpi_upload_router
+from app.api.dashboard_router import router as dashboard_router
+from app.api.vector_router import router as vector_router
+from app.api.pinecone_router import router as pinecone_router
+from app.api.anomaly_router import router as anomaly_router
 
 # ✅ Granite LLM import
-from Project_Files.app.services.granite_llm import ask_granite
+from app.services.granite_llm import ask_granite
 
 app = FastAPI()
 
